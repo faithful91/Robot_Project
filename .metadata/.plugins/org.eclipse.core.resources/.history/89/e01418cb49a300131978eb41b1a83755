@@ -1,0 +1,299 @@
+package com.example.test2;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import java.util.UUID;
+ 
+import com.example.test2.R;
+ 
+import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothSocket;
+import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
+import android.widget.TextView;
+import android.widget.Toast;
+ 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
+ 
+public class MainActivity extends Activity implements SensorEventListener  {
+	TextView   tvX;
+	  TextView   tvY;
+	  TextView   tvZ;
+		private ConnectThread executer;
+
+	private float mLastX, mLastY, mLastZ;
+	private boolean mInitialized;
+	private SensorManager mSensorManager;
+    private Sensor mAccelerometer;
+    private final float NOISE = (float) 2.0;
+  TextView out;
+  private static final int REQUEST_ENABLE_BT = 1;
+  private BluetoothAdapter btAdapter = null;
+  private BluetoothSocket btSocket = null;
+  private OutputStream outStream = null;
+	private static DataOutputStream btout;
+
+  // Well known SPP UUID
+  private static final UUID MY_UUID =
+      UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
+ 
+  // Insert your server's MAC address
+  private static String address = "10:40:F3:F0:2E:A5";
+ 
+  /** Called when the activity is first created. */
+  @Override
+  public void onCreate(Bundle savedInstanceState) {
+    super.onCreate(savedInstanceState);
+    setContentView(R.layout.activity_main);
+    mInitialized = false;
+    mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+    mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+    mSensorManager.registerListener(this, mAccelerometer , SensorManager.SENSOR_DELAY_NORMAL);
+    out = (TextView) findViewById(R.id.out);
+     
+    out.append("\n...In onCreate()...");
+ 
+    btAdapter = BluetoothAdapter.getDefaultAdapter();
+    CheckBTState();
+  }
+ 
+  @Override
+  public void onStart() {
+    super.onStart();
+    out.append("\n...In onStart()...");
+  }
+ public void onResume(){
+	    super.onResume();
+
+	 
+	 out.append("\n...In onResume...\n...Attempting client connect...");
+	 
+	    // Set up a pointer to the remote node using it's address.
+	    BluetoothDevice device = btAdapter.getRemoteDevice(address);
+	 
+	    // Two things are needed to make a connection:
+	    //   A MAC address, which we got above.
+	    //   A Service ID or UUID.  In this case we are using the
+	    //     UUID for SPP.
+	    try {
+	      btSocket = device.createRfcommSocketToServiceRecord(MY_UUID);
+
+	    } catch (IOException e) {
+	      AlertBox("Fatal Error", "In onResume() and socket create failed: " + e.getMessage() + ".");
+	    }
+	 
+	    // Discovery is resource intensive.  Make sure it isn't going on
+	    // when you attempt to connect and pass your message.
+	    btAdapter.cancelDiscovery();
+	 
+	    // Establish the connection.  This will block until it connects.
+	    try {
+	      btSocket.connect();
+	      out.append("\n...Connection established and data link opened...");
+	    
+	      } catch (IOException e2) {
+	        AlertBox("Fatal Error", "In onResume() and unable to close socket during connection failure" + e2.getMessage() + ".");
+	      }
+	    
+	 
+	    // Create a data stream so we can talk to server.
+	    out.append("\n...Sending message to server...");
+	 
+ }
+ 
+ 
+  @Override
+  public void onPause() {
+    super.onPause();
+ 
+    out.append("\n...In onPause()...");
+ 
+    if (outStream != null) {
+      try {
+        outStream.flush();
+      } catch (IOException e) {
+        AlertBox("Fatal Error", "In onPause() and failed to flush output stream: " + e.getMessage() + ".");
+      }
+    }
+ 
+    try     {
+      btSocket.close();
+    } catch (IOException e2) {
+      AlertBox("Fatal Error", "In onPause() and failed to close socket." + e2.getMessage() + ".");
+    }
+  }
+ 
+  @Override
+  public void onStop() {
+    super.onStop();
+    out.append("\n...In onStop()...");
+  }
+ 
+  @Override
+  public void onDestroy() {
+    super.onDestroy();
+    out.append("\n...In onDestroy()...");
+  }
+   
+  private void CheckBTState() {
+    // Check for Bluetooth support and then check to make sure it is turned on
+ 
+    // Emulator doesn't support Bluetooth and will return null
+    if(btAdapter==null) { 
+      AlertBox("Fatal Error", "Bluetooth Not supported. Aborting.");
+    } else {
+      if (btAdapter.isEnabled()) {
+        out.append("\n...Bluetooth is enabled...");
+      } else {
+        //Prompt user to turn on Bluetooth
+        Intent enableBtIntent = new Intent(btAdapter.ACTION_REQUEST_ENABLE);
+        startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+      }
+    }
+  }
+   
+  public void AlertBox( String title, String message ){
+    new AlertDialog.Builder(this)
+    .setTitle( title )
+    .setMessage( message + " Press OK to exit." )
+    .setPositiveButton("OK", new OnClickListener() {
+        public void onClick(DialogInterface arg0, int arg1) {
+          finish();
+        }
+    }).show();
+  }
+  
+  
+  public void onAccuracyChanged(Sensor sensor, int accuracy) {
+		// can be safely ignored for this demo
+	}
+
+	@Override
+	public void onSensorChanged(SensorEvent event) {
+		
+		  TextView tvX= (TextView)findViewById(R.id.x_axis);
+			TextView tvY= (TextView)findViewById(R.id.y_axis);
+			TextView tvZ= (TextView)findViewById(R.id.z_axis);
+			float x = event.values[0];
+			float y = event.values[1];
+			float z = event.values[2];
+			if (!mInitialized) {
+				mLastX = x;
+				mLastY = y;
+				mLastZ = z;
+				
+				mInitialized = true;
+			} else {
+				float deltaX = event.values[0];
+				float deltaY =event.values[1];
+				float deltaZ = event.values[2];
+				
+				mLastX = x;
+				mLastY = y;
+				mLastZ = z;
+				tvX.setText(Float.toString(deltaX));
+				tvY.setText(Float.toString(deltaY));
+				tvZ.setText(Float.toString(deltaZ));
+			
+			 
+			    try {
+			      outStream = btSocket.getOutputStream();
+			    } catch (IOException e) {
+			      AlertBox("Fatal Error", "In onResume() and output stream creation failed:" + e.getMessage() + ".");
+			    }
+			 
+			    String message ="X ["+tvX.getText().toString()+"]"+ " Y ["+tvY.getText().toString()+"]"+" Z ["+tvZ.getText().toString()+"]";
+
+
+			    byte[] msgBuffer = message.getBytes();
+			    try {
+			        out.append("\n...start buff...");
+
+			      outStream.write(msgBuffer);
+			     if ( outStream.toString().length()>16)
+			     { 
+			        out.append(" end buff...");
+
+		          outStream.flush();
+			     }
+			        out.append(" end flush...");
+
+			    } catch (IOException e) {
+			      String msg = "In onResume() and an exception occurred during write: " + e.getMessage();
+			      if (address.equals("00:00:00:00:00:00")) 
+			        msg = msg + ".\n\nUpdate your server address from 00:00:00:00:00:00 to the correct address on line 37 in the java code";
+			      msg = msg +  ".\n\nCheck that the SPP UUID: " + MY_UUID.toString() + " exists on server.\n\n";
+			       
+			      AlertBox("Fatal Error", msg);       
+			    }
+			    
+			        try {
+			          outStream.flush();
+			        } catch (IOException e) {
+			          AlertBox("Fatal Error", "In onPause() and failed to flush output stream: " + e.getMessage() + ".");
+			        }
+			        
+			      
+		}}
+
+  
+	
+	public class ConnectThread extends Thread 
+	{
+		String message;
+		public ConnectThread(String message)
+		{
+			this.message = message;
+		}
+		public void run()
+		{
+			try 
+			{
+				btout.writeUTF(message);// envoie
+			} catch (IOException e)
+			{
+			}
+		}
+		public void cancel()
+		{
+			try 
+			{
+				btSocket.close();
+			} catch (IOException e)
+			{
+			}
+		}
+	}
+
+	public void sendMsg(String message)
+	{
+		executer = new ConnectThread(message);
+		executer.start();
+	}
+	public int getState() 
+	{
+		if (btAdapter == null)
+			return 0;
+		else if (!btAdapter.isEnabled())
+			return 1;
+		else
+			return 2;
+	}
+	
+	
+}
