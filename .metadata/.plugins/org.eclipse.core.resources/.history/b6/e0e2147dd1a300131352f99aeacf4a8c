@@ -1,0 +1,63 @@
+package com.luugiathuy.apps.remotebluetooth;
+
+import java.awt.Robot;
+import java.awt.event.KeyEvent;
+import java.io.BufferedReader;
+import java.io.DataInputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+
+import javax.microedition.io.StreamConnection;
+
+public class ProcessConnectionThread implements Runnable{
+
+	private StreamConnection mConnection;
+	
+	// Constant that indicate command from devices
+	private static final int EXIT_CMD = -1;
+	private static final int KEY_RIGHT = 1;
+	private static final int KEY_LEFT = 2;
+	
+	public ProcessConnectionThread(StreamConnection connection)
+	{
+		mConnection = connection;
+		
+	}
+	
+	@Override
+	public void run() {
+		try {
+			
+			// prepare to receive data
+			DataInputStream inputStream = mConnection.openDataInputStream();
+			System.out.println("waiting for input");
+	        
+	        while (true) {
+	        	
+	        	 BufferedReader bReader=new BufferedReader(new InputStreamReader(inStream));
+	              String command=bReader.readLine();
+	        	
+	        	processCommand(command);
+        	}
+        } catch (Exception e) {
+    		e.printStackTrace();
+    	}
+	}
+	
+	/**
+	 * Process the command from client
+	 * @param command the command code
+	 */
+	private void processCommand(String command) {
+		try {
+			Robot robot = new Robot();
+			
+	    	
+	    		System.out.println(command);
+	    		
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+}
