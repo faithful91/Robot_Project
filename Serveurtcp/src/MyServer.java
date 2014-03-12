@@ -21,14 +21,17 @@ public class MyServer {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
+		//
 		while(true){
 			try {
 				socket = serverSocket.accept();
 				dataInputStream = new DataInputStream(socket.getInputStream());
 				dataOutputStream = new DataOutputStream(socket.getOutputStream());
-				System.out.println("ip: " + socket.getInetAddress());
-				System.out.println("message: " + dataInputStream.readLine());
+				String s=dataInputStream.readLine();
+				String x=s.substring(0,6);
+				String y=s.substring(6,12);
+				String z=s.substring(12,18);
+	    		System.out.println("X["+x+"] Y ["+y+"]"+" Z ["+z+"]");
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -64,3 +67,4 @@ public class MyServer {
 		}
 	}
 }
+
