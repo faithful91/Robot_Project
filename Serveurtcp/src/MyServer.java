@@ -6,7 +6,7 @@ import java.net.Socket;
 
 
 public class MyServer {
-	
+	//
 	@SuppressWarnings("deprecation")
 	public static void main(String[] args){
 		ServerSocket serverSocket = null;
