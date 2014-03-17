@@ -6,7 +6,7 @@ import java.net.Socket;
 
 
 public class MyServer {
-	//
+	
 	@SuppressWarnings("deprecation")
 	public static void main(String[] args){
 		ServerSocket serverSocket = null;
@@ -28,10 +28,11 @@ public class MyServer {
 				dataInputStream = new DataInputStream(socket.getInputStream());
 				dataOutputStream = new DataOutputStream(socket.getOutputStream());
 				String s=dataInputStream.readLine();
+				if (s!=null) {
 				String x=s.substring(0,6);
 				String y=s.substring(6,12);
 				String z=s.substring(12,18);
-	    		System.out.println("X["+x+"] Y ["+y+"]"+" Z ["+z+"]");
+	    		System.out.println("X["+x+"] Y ["+y+"]"+" Z ["+z+"]");}
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -67,4 +68,3 @@ public class MyServer {
 		}
 	}
 }
-

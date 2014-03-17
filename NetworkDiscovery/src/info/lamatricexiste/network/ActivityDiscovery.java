@@ -43,6 +43,7 @@ import android.widget.Toast;
 import android.widget.AdapterView.OnItemClickListener;
 
 final public class ActivityDiscovery extends ActivityNet implements OnItemClickListener {
+    boolean a=true;
 
     private final String TAG = "ActivityDiscovery";
     public final static long VIBRATE = (long) 250;
@@ -74,18 +75,19 @@ final public class ActivityDiscovery extends ActivityNet implements OnItemClickL
         // Discover
         btn_discover = (Button) findViewById(R.id.btn_discover);
         btn_discover.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                startDiscovering();
+
+        	public void onClick(View v) {
+               if (a=true){Toast.makeText(ActivityDiscovery.this,
+                       "search", Toast.LENGTH_SHORT).show();
+            	startDiscovering();a=false;}
+               else {Toast.makeText(ActivityDiscovery.this,
+                       "cancel", Toast.LENGTH_SHORT).show();stopDiscovering();a=true;
+           }
             }
         });
 
         // Options
-        Button btn_options = (Button) findViewById(R.id.btn_options);
-        btn_options.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                startActivity(new Intent(ctxt, Prefs.class));
-            }
-        });
+       
 
         // Hosts list
         adapter = new HostsAdapter(ctxt);
@@ -253,10 +255,11 @@ final public class ActivityDiscovery extends ActivityNet implements OnItemClickL
                 switch (which) {
                     case 0:
                         // Start portscan
-                        Intent intent = new Intent(ctxt, ActivityPortscan.class);
+                        Intent intent = new Intent(ctxt, Main1Activity.class);
                         intent.putExtra(EXTRA_WIFI, NetInfo.isConnected(ctxt));
                         intent.putExtra(HostBean.EXTRA, host);
                         startActivityForResult(intent, SCAN_PORT_RESULT);
+
                         break;
                     case 1:
                         // Change name
@@ -277,18 +280,14 @@ final public class ActivityDiscovery extends ActivityNet implements OnItemClickL
                                 host.hostname = name;
                                 s.setCustomName(name, host.hardwareAddress);
                                 adapter.notifyDataSetChanged();
-                                Toast.makeText(ActivityDiscovery.this,
-                                        R.string.discover_action_saved, Toast.LENGTH_SHORT).show();
-                            }
+                                }
                         });
                         rename.setNegativeButton(R.string.btn_remove, new OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
                                 host.hostname = null;
                                 s.removeCustomName(host.hardwareAddress);
                                 adapter.notifyDataSetChanged();
-                                Toast.makeText(ActivityDiscovery.this,
-                                        R.string.discover_action_deleted, Toast.LENGTH_SHORT)
-                                        .show();
+                                
                             }
                         });
                         rename.show();
@@ -385,10 +384,10 @@ final public class ActivityDiscovery extends ActivityNet implements OnItemClickL
         setButton(btn_discover, R.drawable.cancel, false);
         btn_discover.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                cancelTasks();
+                cancelTasks();Toast.makeText(ActivityDiscovery.this,
+                        "cancel", Toast.LENGTH_SHORT).show();stopDiscovering();a=true;
             }
         });
-        makeToast(R.string.discover_start);
         setProgressBarVisibility(true);
         setProgressBarIndeterminateVisibility(true);
         initList();
